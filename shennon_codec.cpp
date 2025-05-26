@@ -4,38 +4,34 @@
 #include <map>
 #include <stdexcept>
 #include <vector>
+#include <iostream>
 
 void encodeFile(const std::string& input_file, const std::string& output_file, 
                const std::string& dict_file) {
-
     std::vector<Symbol> symbols;
     analyzeFile(input_file, symbols);
     buildShannonCodes(symbols);
     writeDictionary(dict_file, symbols);
-
 
     std::map<char, std::string> code_map;
     for (const auto& symbol : symbols) {
         code_map[symbol.byte] = symbol.code;
     }
 
-
     std::ifstream in(input_file, std::ios::binary);
     std::ofstream out(output_file, std::ios::binary);
     if (!in || !out) {
-        throw std::runtime_error("File opening error");
+        throw std::runtime_error("Cannot open files");
     }
 
- 
     in.seekg(0, std::ios::end);
     size_t file_size = in.tellg();
     in.seekg(0, std::ios::beg);
-    std::vector<char> file_data(file_size);
-    in.read(file_data.data(), file_size);
-
+    std::vector<char> input_data(file_size);
+    in.read(input_data.data(), file_size);
 
     std::string bit_buffer;
-    for (char byte : file_data) {
+    for (char byte : input_data) {
         bit_buffer += code_map[byte];
         
 
@@ -46,10 +42,9 @@ void encodeFile(const std::string& input_file, const std::string& output_file,
         }
     }
 
-
     if (!bit_buffer.empty()) {
 
-        bit_buffer += "1"; 
+        bit_buffer += "1";
         while (bit_buffer.size() < 8) {
             bit_buffer += "0";
         }
@@ -72,9 +67,8 @@ void decodeFile(const std::string& input_file, const std::string& output_file,
     std::ifstream in(input_file, std::ios::binary);
     std::ofstream out(output_file, std::ios::binary);
     if (!in || !out) {
-        throw std::runtime_error("File opening error");
+        throw std::runtime_error("Cannot open files");
     }
-
 
     in.seekg(0, std::ios::end);
     size_t file_size = in.tellg();
@@ -82,18 +76,15 @@ void decodeFile(const std::string& input_file, const std::string& output_file,
     std::vector<char> encoded_data(file_size);
     in.read(encoded_data.data(), file_size);
 
-
     std::string bit_string;
     for (char byte : encoded_data) {
         bit_string += std::bitset<8>(byte).to_string();
     }
 
-
-    size_t last_one = bit_string.rfind('1');
-    if (last_one != std::string::npos) {
-        bit_string.resize(last_one);
+    size_t last_data_bit = bit_string.rfind('1');
+    if (last_data_bit != std::string::npos) {
+        bit_string.resize(last_data_bit);
     }
-
 
     std::string current_code;
     for (char bit : bit_string) {
