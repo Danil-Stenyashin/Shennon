@@ -8,6 +8,16 @@
 
 void encodeFile(const std::string& input_file, const std::string& output_file, 
                const std::string& dict_file) {
+               
+        std::ifstream in_check(input_file, std::ios::binary | std::ios::ate);
+    if (in_check.tellg() == 0) {
+        std::ofstream dict_out(dict_file);
+        dict_out << 0 << std::endl; 
+        std::ofstream out(output_file);
+        return; 
+    }
+    in_check.close();          
+     
     std::vector<Symbol> symbols;
     analyzeFile(input_file, symbols);
     buildShannonCodes(symbols);
@@ -55,6 +65,14 @@ void encodeFile(const std::string& input_file, const std::string& output_file,
 
 void decodeFile(const std::string& input_file, const std::string& output_file, 
                const std::string& dict_file) {
+               
+    std::ifstream dict_in(dict_file);
+    size_t symbol_count;
+    dict_in >> symbol_count;
+    if (symbol_count == 0) {
+        std::ofstream out(output_file);
+        return; 
+    }
 
     auto symbols = readDictionary(dict_file);
     buildShannonCodes(symbols);
