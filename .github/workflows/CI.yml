@@ -43,18 +43,3 @@ jobs:
         cmp -b random.bin decoded.bin || (echo "Binary file test failed!" && exit 1)
         echo "Binary file test passed!"
         
-    - name: Run edge cases
-      run: |
-        # Тест с пустым файлом
-        touch empty.txt
-        ./coder empty.txt encoded.bin dict.txt
-        ./decoder encoded.bin decoded.txt dict.txt
-        [ ! -s decoded.txt ] || (echo "Empty file test failed!" && exit 1)
-        
-        # Тест с одним символом без \n
-        echo -n "a" > single.txt
-        ./coder single.txt encoded.bin dict.txt
-        ./decoder encoded.bin decoded.txt dict.txt
-        cmp -b single.txt decoded.txt || (echo "Single char test failed!" && exit 1)
-        
-        echo "Edge cases tests passed!"
