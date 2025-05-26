@@ -22,7 +22,7 @@ jobs:
         
     - name: Create test files
       run: |
-        echo "abracadabra" > input.txt
+        echo -n "abracadabra" > input.txt  # -n чтобы избежать автоматического \n
         head -c 100 /dev/urandom > random.bin
         
     - name: Run text file test
@@ -30,7 +30,9 @@ jobs:
         ./coder input.txt encoded.bin dict.txt
         ./decoder encoded.bin decoded.txt dict.txt
         
-        diff -s input.txt decoded.txt || (echo "Text file test failed!" && exit 1)
+        # Проверяем точное совпадение (включая отсутствие \n)
+        cmp -b input.txt decoded.txt || (echo "Text file content mismatch!" && exit 1)
+        [ $(stat -c%s input.txt) -eq $(stat -c%s decoded.txt) ] || (echo "File size mismatch!" && exit 1)
         echo "Text file test passed!"
         
     - name: Run binary file test
@@ -38,19 +40,21 @@ jobs:
         ./coder random.bin encoded.bin dict.txt
         ./decoder encoded.bin decoded.bin dict.txt
         
-        cmp random.bin decoded.bin || (echo "Binary file test failed!" && exit 1)
+        cmp -b random.bin decoded.bin || (echo "Binary file test failed!" && exit 1)
         echo "Binary file test passed!"
         
     - name: Run edge cases
       run: |
+        # Тест с пустым файлом
         touch empty.txt
         ./coder empty.txt encoded.bin dict.txt
         ./decoder encoded.bin decoded.txt dict.txt
         [ ! -s decoded.txt ] || (echo "Empty file test failed!" && exit 1)
         
+        # Тест с одним символом без \n
         echo -n "a" > single.txt
         ./coder single.txt encoded.bin dict.txt
         ./decoder encoded.bin decoded.txt dict.txt
-        diff -s single.txt decoded.txt || (echo "Single char test failed!" && exit 1)
+        cmp -b single.txt decoded.txt || (echo "Single char test failed!" && exit 1)
         
         echo "Edge cases tests passed!"

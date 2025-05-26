@@ -65,8 +65,9 @@ void decodeFile(const std::string& input_file, const std::string& output_file,
     }
 
     std::string current_code;
-    for (char bit : bit_string) {
-        current_code += bit;
+    size_t pos = 0;
+    while (pos < bit_string.length()) {
+        current_code += bit_string[pos++];
         if (code_map.count(current_code)) {
             out.put(code_map[current_code]);
             current_code.clear();
