@@ -34,4 +34,4 @@ make test
 
 ## Очистка:
 
-make clean
+make clean 
