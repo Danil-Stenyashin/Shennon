@@ -1,5 +1,5 @@
 CXX := g++
-CXXFLAGS := -std=c++17 -Wall -Wextra -O2 -I.
+CXXFLAGS := -std=c++23 -Wall -Wextra -O2 -I.
 TARGETS := coder decoder tests
 
 all: $(TARGETS)
