@@ -39,6 +39,14 @@ void encodeFile(const std::string& input_file, const std::string& output_file,
         std::bitset<8> bits(buffer);
         out.put(static_cast<char>(bits.to_ulong()));
     }
+    if (!buffer.empty()) {
+        buffer += "1";
+        while (buffer.size() < 8) {
+            buffer += "0";
+        }
+        std::bitset<8> bits(buffer);
+        out.put(static_cast<char>(bits.to_ulong()));
+    }
 }
 
 void decodeFile(const std::string& input_file, const std::string& output_file, 
@@ -62,6 +70,10 @@ void decodeFile(const std::string& input_file, const std::string& output_file,
     while (in.get(byte)) {
         std::bitset<8> bits(byte);
         bit_string += bits.to_string();
+    }
+    size_t last_one = bit_string.rfind('1');
+    if (last_one != std::string::npos) {
+        bit_string.resize(last_one); 
     }
 
     std::string current_code;
