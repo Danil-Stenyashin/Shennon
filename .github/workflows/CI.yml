@@ -1,0 +1,56 @@
+name: Shannon Coder/Decoder CI Test
+
+on: [push, pull_request]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y g++ make
+        
+    - name: Build project
+      run: |
+        make clean
+        make
+        
+    - name: Create test files
+      run: |
+        echo "abracadabra" > input.txt
+        head -c 100 /dev/urandom > random.bin
+        
+    - name: Run text file test
+      run: |
+        ./coder input.txt encoded.bin dict.txt
+        ./decoder encoded.bin decoded.txt dict.txt
+        
+        diff -s input.txt decoded.txt || (echo "Text file test failed!" && exit 1)
+        echo "Text file test passed!"
+        
+    - name: Run binary file test
+      run: |
+        ./coder random.bin encoded.bin dict.txt
+        ./decoder encoded.bin decoded.bin dict.txt
+        
+        cmp random.bin decoded.bin || (echo "Binary file test failed!" && exit 1)
+        echo "Binary file test passed!"
+        
+    - name: Run edge cases
+      run: |
+        touch empty.txt
+        ./coder empty.txt encoded.bin dict.txt
+        ./decoder encoded.bin decoded.txt dict.txt
+        [ ! -s decoded.txt ] || (echo "Empty file test failed!" && exit 1)
+        
+        echo -n "a" > single.txt
+        ./coder single.txt encoded.bin dict.txt
+        ./decoder encoded.bin decoded.txt dict.txt
+        diff -s single.txt decoded.txt || (echo "Single char test failed!" && exit 1)
+        
+        echo "Edge cases tests passed!"
