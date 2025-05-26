@@ -3,6 +3,7 @@
 #include <bitset>
 #include <map>
 #include <stdexcept>
+#include <vector>
 
 void encodeFile(const std::string& input_file, const std::string& output_file, 
                const std::string& dict_file) {
@@ -22,29 +23,25 @@ void encodeFile(const std::string& input_file, const std::string& output_file,
         throw std::runtime_error("Error opening files for encoding");
     }
 
+    std::string bit_buffer;
     char byte;
-    std::string buffer;
     while (in.get(byte)) {
-        buffer += code_map[byte];
+        bit_buffer += code_map[byte];
         
-        while (buffer.size() >= 8) {
-            std::bitset<8> bits(buffer.substr(0, 8));
+        while (bit_buffer.size() >= 8) {
+            std::bitset<8> bits(bit_buffer.substr(0, 8));
             out.put(static_cast<char>(bits.to_ulong()));
-            buffer = buffer.substr(8);
+            bit_buffer = bit_buffer.substr(8);
         }
     }
 
-    if (!buffer.empty()) {
-        while (buffer.size() < 8) buffer += '0';
-        std::bitset<8> bits(buffer);
-        out.put(static_cast<char>(bits.to_ulong()));
-    }
-    if (!buffer.empty()) {
-        buffer += "1";
-        while (buffer.size() < 8) {
-            buffer += "0";
+
+    if (!bit_buffer.empty()) {
+        bit_buffer += "1"; 
+        while (bit_buffer.size() < 8) {
+            bit_buffer += "0";
         }
-        std::bitset<8> bits(buffer);
+        std::bitset<8> bits(bit_buffer);
         out.put(static_cast<char>(bits.to_ulong()));
     }
 }
@@ -68,18 +65,18 @@ void decodeFile(const std::string& input_file, const std::string& output_file,
     std::string bit_string;
     char byte;
     while (in.get(byte)) {
-        std::bitset<8> bits(byte);
-        bit_string += bits.to_string();
+        bit_string += std::bitset<8>(byte).to_string();
     }
+
+
     size_t last_one = bit_string.rfind('1');
     if (last_one != std::string::npos) {
         bit_string.resize(last_one); 
     }
 
     std::string current_code;
-    size_t pos = 0;
-    while (pos < bit_string.length()) {
-        current_code += bit_string[pos++];
+    for (size_t pos = 0; pos < bit_string.size(); ++pos) {
+        current_code += bit_string[pos];
         if (code_map.count(current_code)) {
             out.put(code_map[current_code]);
             current_code.clear();
